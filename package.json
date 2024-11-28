@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:css": "npx postcss build.css -o ./templates/tailwind_output.css",
-    "start": "NODE_ENV=production node app",
+    "start": "NODE_ENV=production nodemon app",
     "dev": "cross-env NODE_ENV=development nodemon app"
   },
   "private": true,
