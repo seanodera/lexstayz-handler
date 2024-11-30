@@ -211,3 +211,27 @@ exports.getPaystackBanks = async (req, res) => {
         return res.status(500).json({error: error.message});
     }
 }
+
+
+exports.getPawapayConfigs = async (req, res) => {
+    try {
+        const response = await axios.get('https://api.sandbox.pawapay.cloud/active-conf', {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${process.env.PAWAPAY_SECRET_KEY}`
+            }
+        });
+
+        const data = response.data.countries.filter((country) => {
+
+            return country?.correspondents?.some(correspondent => correspondent.currency === req.query.currency);
+        })
+
+        return res.status(200).json({
+            data: data,
+            success: true,
+        })
+    } catch (error) {
+        return res.status(500).json({error: error.message});
+    }
+}
