@@ -120,29 +120,20 @@ exports.sendBookingStatusMail =  async (req,res) => {
 
 exports.sendBookingNotificationMail = async (req,res) => {
         try {
-            const {booking} =req.body;
+            const {booking,host} =req.body;
             const htmlContent = compileTemplateWithTailwind(
                 "./templates/booking_notification_email.html",
                 cssLocation,
                 {customerName: booking.user.email});
 
-            const hostDocRef = db
-                .collection(`/hosts/${booking.hostId}`)
-                .doc("anotherDocumentId");
-            const hostDocSnapshot = await hostDocRef.get();
-
-            if (hostDocSnapshot.exists) {
-                const hostDocumentData = hostDocSnapshot.data();
 
                 await postmarkClient.sendEmail({
                     From: " thelexstayzteam@fadorteclimited.com",
-                    To: hostDocumentData.email,
+                    To: host.email,
                     Subject: "New Booking Notification",
                     HtmlBody: htmlContent,
                 });
-            } else {
-                console.log("No such document!");
-            }
+
             res.status(200).send({
                 success: true,
                 message: 'Mail Sent Successfully'
