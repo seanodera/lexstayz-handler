@@ -107,30 +107,54 @@ exports.verifyTransaction = async (req, res) => {
 
 // Create Refund
 exports.createRefund = async (req, res) => {
-    const {reference, amount} = req.body;
+    const {reference, amount, method, refundId, depositId} = req.body;
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    const token = process.env.PAWAPAY_BEARER_TOKEN; // Ensure to store your bearer token in an environment variable
 
     if (!secretKey) {
         return res.status(500).json({status: 'error', message: 'Paystack secret key not found'});
     }
 
-    try {
-        const response = await axios.post(`https://api.paystack.co/refund`, {
-            transaction: reference,
-            amount
-        }, {
-            headers: {
-                Authorization: `Bearer ${secretKey}`,
-            },
-        });
+    if (!token) {
+        return res.status(500).json({status: 'error', message: 'Pawapay token not found'});
+    }
 
-        if (response.data.status) {
-            return res.status(200).json({status: 'success', data: response.data});
-        } else {
-            return res.status(400).json({status: 'error', message: 'Refund creation failed'});
+    try {
+        if (method === 'Pawapay') {
+            const response = await axios.post('https://api.sandbox.pawapay.io/refunds', {
+                refundId,
+                depositId,
+                amount: `${amount && Math.round(amount)}`
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            });
+
+            if (response.data) {
+                return res.status(200).json({status: 'success', data: response.data});
+            } else {
+                return res.status(400).json({status: 'error', message: 'Refund creation failed'});
+            }
+        } else if (method === 'Paystack') {
+            const response = await axios.post('https://api.paystack.co/refund', {
+                transaction: reference,
+                amount
+            }, {
+                headers: {
+                    Authorization: `Bearer ${secretKey}`,
+                },
+            });
+
+            if (response.data.status) {
+                return res.status(200).json({status: 'success', data: response.data});
+            } else {
+                return res.status(400).json({status: 'error', message: 'Refund creation failed'});
+            }
         }
     } catch (error) {
-        console.error('Paystack refund error:', error);
+        console.error('Refund error:', error);
         return res.status(500).json({status: 'error', message: 'Server error'});
     }
 };

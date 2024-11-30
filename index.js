@@ -9,10 +9,10 @@ app.use(express.json());
 app.use(cors());
 
 const payments = require('./routes/paymentRoutes')
-
+const mailers = require('./routes/mailerRoutes')
 
 app.use('/api',payments)
-
+app.use('/api',mailers)
 
 app.get('/api/hello-lexstayz', (req, res) => {
     res.send('Hello Lexstayz!');
