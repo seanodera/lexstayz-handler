@@ -120,16 +120,16 @@ exports.sendBookingStatusMail =  async (req,res) => {
 
 exports.sendBookingNotificationMail = async (req,res) => {
         try {
-            const {booking,host} =req.body;
+            const {userEmail, hostEmail} =req.body;
             const htmlContent = compileTemplateWithTailwind(
                 "./templates/booking_notification_email.html",
                 cssLocation,
-                {customerName: booking.user.email});
+                {customerName: userEmail});
 
 
                 await postmarkClient.sendEmail({
                     From: " thelexstayzteam@fadorteclimited.com",
-                    To: host.email,
+                    To: hostEmail,
                     Subject: "New Booking Notification",
                     HtmlBody: htmlContent,
                 });
