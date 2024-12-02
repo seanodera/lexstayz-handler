@@ -235,3 +235,50 @@ exports.getPawapayConfigs = async (req, res) => {
         return res.status(500).json({error: error.message});
     }
 }
+
+// @desc get paystack banks
+// @route GET /api/v1/payouts/banks
+exports.getPaystackBanks = async (req, res) => {
+    try {
+        const response = await axios.get(`https://api.paystack.co/bank`, {
+            params: {currency: req.query.currency},
+            headers: {
+                Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+            }
+        });
+        return res.status(200).json({
+            success: true,
+            data: response.data.data,
+        });
+    } catch (error) {
+        return res.status(500).json({error: error.message});
+    }
+}
+
+exports.createPaystackRecipient = async (req,res) => {
+    const {userId,type, name,account_number,bank_code,currency} = req.body
+    try {
+        const response = await axios.post('https://api.paystack.co/transferrecipient', {
+            type: type,
+            name: name,
+            account_number: account_number,
+            bank_code: bank_code,
+            currency: currency,
+            metadata: {
+                userId: userId
+            }
+        }, {
+            headers: {
+                Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: response.data.data
+        })
+    } catch (error)  {
+        console.log(error);
+        throw new Error('User not created: ' + error.message);
+    }
+}

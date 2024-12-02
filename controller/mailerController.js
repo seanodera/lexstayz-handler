@@ -128,7 +128,7 @@ exports.sendBookingNotificationMail = async (req,res) => {
 
 
                 await postmarkClient.sendEmail({
-                    From: " thelexstayzteam@fadorteclimited.com",
+                    From: "thelexstayzteam@fadorteclimited.com",
                     To: hostEmail,
                     Subject: "New Booking Notification",
                     HtmlBody: htmlContent,
