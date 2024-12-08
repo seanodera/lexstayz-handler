@@ -27,7 +27,12 @@ const convertCurrency = async (amount, currency) => {
 exports.convertCurrency = convertCurrency;
 
 exports.initiatePaystackPayment = async (email, amount,currency,callback_url,reference) => {
-    const finalAmount = await convertCurrency(amount, currency)
+    let finalAmount;
+    if (currency === 'KES'){
+        finalAmount= amount;
+    } else {
+       finalAmount = await convertCurrency(amount, currency)
+    }
     console.log(finalAmount);
     const secretKey = (currency === 'KES')? process.env.PAYSTACK_KE_SECRET_KEY : process.env.PAYSTACK_SECRET_KEY
     const paymentUrl = `https://api.paystack.co/transaction/initialize`;
