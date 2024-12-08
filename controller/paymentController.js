@@ -17,7 +17,12 @@ exports.createTransaction = async (req, res) => {
         let authorization_url;
         let method;
         let paymentReference;
-        if (currency !== 'GHS') {
+        if (currency === 'KES') {
+            const response = await initiatePaystackPayment(email, amount, currency, callback_url, reference);
+            authorization_url = response.data.authorization_url;
+            paymentReference = response.data.reference;
+            method = 'Paystack_KE'
+        } else if (currency !== 'GHS') {
             const response = await initiatePowerPayment(email, amount, country, callback_url, reference, `Stay at ${booking.stay.name}`);
             authorization_url = response.redirectUrl;
             paymentReference = response.reference;
@@ -52,10 +57,11 @@ exports.verifyTransaction = async (req, res) => {
         let status = 'PENDING';
         let amountPaid = 0;
         let data;
-        if (method === 'Paystack') {
+        if (method === 'Paystack' || method === 'Paystack_KE') {
+            const secretKey = (method === 'Paystack_KE')? process.env.PAYSTACK_KE_SECRET_KEY : process.env.PAYSTACK_SECRET_KEY
             const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
                 headers: {
-                    Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                    Authorization: `Bearer ${secretKey}`,
                 },
             });
             data = response.data
@@ -108,16 +114,8 @@ exports.verifyTransaction = async (req, res) => {
 // Create Refund
 exports.createRefund = async (req, res) => {
     const {reference, amount, method, refundId, depositId} = req.body;
-    const secretKey = process.env.PAYSTACK_SECRET_KEY;
-    const token = process.env.PAWAPAY_BEARER_TOKEN; // Ensure to store your bearer token in an environment variable
 
-    if (!secretKey) {
-        return res.status(500).json({status: 'error', message: 'Paystack secret key not found'});
-    }
-
-    if (!token) {
-        return res.status(500).json({status: 'error', message: 'Pawapay token not found'});
-    }
+    const token = process.env.PAWAPAY_BEARER_TOKEN;
 
     try {
         if (method === 'Pawapay') {
@@ -137,7 +135,8 @@ exports.createRefund = async (req, res) => {
             } else {
                 return res.status(400).json({status: 'error', message: 'Refund creation failed'});
             }
-        } else if (method === 'Paystack') {
+        } else if (method === 'Paystack' || method === 'Paystack_KE') {
+            const secretKey = (method === 'Paystack_KE')? process.env.PAYSTACK_KE_SECRET_KEY : process.env.PAYSTACK_SECRET_KEY
             const response = await axios.post('https://api.paystack.co/refund', {
                 transaction: reference,
                 amount
@@ -255,8 +254,8 @@ exports.getPaystackBanks = async (req, res) => {
     }
 }
 
-exports.createPaystackRecipient = async (req,res) => {
-    const {userId,type, name,account_number,bank_code,currency} = req.body
+exports.createPaystackRecipient = async (req, res) => {
+    const {userId, type, name, account_number, bank_code, currency} = req.body
     try {
         const response = await axios.post('https://api.paystack.co/transferrecipient', {
             type: type,
@@ -277,7 +276,7 @@ exports.createPaystackRecipient = async (req,res) => {
             success: true,
             data: response.data.data
         })
-    } catch (error)  {
+    } catch (error) {
         console.log(error);
         throw new Error('User not created: ' + error.message);
     }
