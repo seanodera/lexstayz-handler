@@ -1,6 +1,6 @@
 const axios = require("axios");
 const {isAxiosError, post} = require("axios");
-const {initiatePowerPayment, initiatePaystackPayment, verifyPaystackPayment} = require("../paymentHelper");
+const {initiatePowerPayment, initiatePaystackPayment, verifyPaystackPayment, createPaystackRecipient} = require("../paymentHelper");
 const process = require("node:process");
 
 
@@ -247,30 +247,45 @@ exports.getPaystackBanks = async (req, res) => {
     }
 }
 
-exports.createPaystackRecipient = async (req, res) => {
-    const {userId, type, name, account_number, bank_code, currency} = req.body
-    try {
-        const response = await axios.post('https://api.paystack.co/transferrecipient', {
-            type: type,
-            name: name,
-            account_number: account_number,
-            bank_code: bank_code,
-            currency: currency,
-            metadata: {
-                userId: userId
-            }
-        }, {
-            headers: {
-                Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
-            }
-        });
 
-        return res.status(200).json({
-            success: true,
-            data: response.data.data
-        })
-    } catch (error) {
-        console.log(error);
-        throw new Error('User not created: ' + error.message);
+
+exports.createWithdrawalAccount = async (req, res) => {
+    const {userId, type, name, accountNumber, bankCode, currency, bankName} = req.body;
+    try {
+        let withdrawalAccount;
+
+            if (currency === 'GHS' || currency === 'KES') {
+                const recipient = await createPaystackRecipient(userId, type, name, accountNumber, bankCode, currency);
+                if (recipient) {
+                    console.log(recipient)
+                    withdrawalAccount = {
+                        type: recipient.type,
+                        name: name,
+                        accountNumber: accountNumber,
+                        bankCode: bankCode,
+                        bankName: bankName,
+                        currency: currency,
+                        recipient_code: recipient.recipient_code,
+                        service: 'Paystack'
+                    };
+                }
+            } else {
+                withdrawalAccount = {
+                    userId: userId,
+                    type: 'MSISDN',
+                    name: name,
+                    accountNumber: accountNumber,
+                    currency: currency,
+                    bankCode: bankCode,
+                    service: 'Pawapay'
+                };
+            }
+
+            res.status(200).json({
+                status: 'success',
+                data: withdrawalAccount
+            })
+    } catch (error){
+
     }
 }

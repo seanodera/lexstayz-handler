@@ -233,3 +233,29 @@ exports.getConfigs = async () => {
         }
     });
 }
+
+exports.createPaystackRecipient = async (userId,type, name,account_number,bank_code,currency) => {
+
+    try {
+        const secretKey = (currency === 'KES')? process.env.PAYSTACK_KE_SECRET_KEY : process.env.PAYSTACK_SECRET_KEY
+        const response = await axios.post('https://api.paystack.co/transferrecipient', {
+            type: type,
+            name: name,
+            account_number: account_number,
+            bank_code: bank_code,
+            currency: currency,
+            metadata: {
+                userId: userId
+            }
+        }, {
+            headers: {
+                Authorization: `Bearer ${secretKey}`
+            }
+        });
+
+        return response.data.data;
+    } catch (error)  {
+        console.log(error);
+        throw new Error('User not created: ' + error.message);
+    }
+}
