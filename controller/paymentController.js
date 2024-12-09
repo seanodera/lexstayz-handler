@@ -1,6 +1,6 @@
 const axios = require("axios");
 const {isAxiosError, post} = require("axios");
-const {initiatePowerPayment, initiatePaystackPayment} = require("../paymentHelper");
+const {initiatePowerPayment, initiatePaystackPayment, verifyPaystackPayment} = require("../paymentHelper");
 const process = require("node:process");
 
 
@@ -53,37 +53,30 @@ exports.verifyTransaction = async (req, res) => {
 
 
     try {
-        console.log(req.body)
+
         let status = 'PENDING';
         let amountPaid = 0;
         let data;
+        let finalMethod = method
         if (method === 'Paystack' || method === 'Paystack_KE') {
-            const secretKey = (method === 'Paystack_KE')? process.env.PAYSTACK_KE_SECRET_KEY : process.env.PAYSTACK_SECRET_KEY
-            const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
-                headers: {
-                    Authorization: `Bearer ${secretKey}`,
-                },
-            });
-            data = response.data
-            if (response.data.data.status === 'success') {
-                status = 'COMPLETED';
-                amountPaid = response.data.data.amount / 100
 
-            } else {
-                status = 'FAILED';
-            }
+            const response = await verifyPaystackPayment(reference)
+            status = response.status
+            amountPaid = response.amountPaid
+            finalMethod = response.method
+            data = response.data
         } else {
             const response = await axios.get(`https://api.sandbox.pawapay.cloud/deposits/${reference}`, {
                 headers: {
                     Authorization: `Bearer ${process.env.PAWAPAY_SECRET_KEY}`
                 }
             })
-            console.log(response.data)
             const deposit = response.data[0];
             data = deposit;
             if (response.data.length === 0) {
                 status = 'FAILED';
             } else {
+                finalMethod = 'PAWAPAY'
                 if (deposit.status === "ACCEPTED" || deposit.status === "COMPLETED") {
                     status = 'COMPLETED';
                     amountPaid = deposit.depositedAmount;
@@ -99,7 +92,7 @@ exports.verifyTransaction = async (req, res) => {
         if (status === 'COMPLETED') {
             return res.status(200).json({
                 status: 'success', data: {
-                    reference, method, data
+                    reference, method: finalMethod, data
                 }
             });
         } else {

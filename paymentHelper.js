@@ -119,6 +119,66 @@ exports.updateBalance = async (userId) => {
 }
 
 
+exports.verifyPaystackPayment = async (reference) => {
+    try {
+        let secretKey = process.env.PAYSTACK_KE_SECRET_KEY;
+        let response;
+
+        // Attempt the first API call
+        response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+            headers: {
+                Authorization: `Bearer ${secretKey}`,
+            },
+        });
+
+        // Check if status is not 400
+        if (response.status !== 400) {
+            const data = response.data;
+            let status, amountPaid;
+
+            if (data.data.status === 'success') {
+                status = 'COMPLETED';
+                amountPaid = data.data.amount / 100;
+            } else {
+                status = 'FAILED';
+            }
+            return { status, amountPaid, method: 'PAYSTACK', data: data };
+        } else {
+            throw new Error('First key failed with status 400');
+        }
+    } catch (e) {
+        // Retry with the alternate API key if the first attempt fails or returns a 400 status
+        if (e.response && e.response.status === 400) {
+            const errorData = e.response.data;
+            if (errorData.data && errorData.data.code === 'transaction_not_found') {
+                try {
+                    const alternateSecretKey = process.env.PAYSTACK_SECRET_KEY;
+
+                    const retryResponse = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+                        headers: {
+                            Authorization: `Bearer ${alternateSecretKey}`,
+                        },
+                    });
+
+                    const retryData = retryResponse.data;
+                    let status, amountPaid;
+
+                    if (retryData.data.status === 'success') {
+                        status = 'COMPLETED';
+                        amountPaid = retryData.data.amount / 100;
+                    } else {
+                        status = 'FAILED';
+                    }
+                    return {status, amountPaid, method: 'PAYSTACK_KE',data: retryData};
+
+                } catch (retryError) {
+                    console.error('Both API keys failed', retryError);
+                }
+            }
+        }
+    }
+};
+
 exports.completePawaPayPayout = async (amount,payout,account) => {
     try {
         const generatedUUID = uuidv4();
