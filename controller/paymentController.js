@@ -214,10 +214,7 @@ exports.getPawapayConfigs = async (req, res) => {
             }
         });
 
-        const data = response.data.countries.filter((country) => {
-
-            return country?.correspondents?.some(correspondent => correspondent.currency === req.query.currency);
-        })
+        const data = response.data.countries
 
         return res.status(200).json({
             data: data,
@@ -228,24 +225,6 @@ exports.getPawapayConfigs = async (req, res) => {
     }
 }
 
-// @desc get paystack banks
-// @route GET /api/v1/payouts/banks
-exports.getPaystackBanks = async (req, res) => {
-    try {
-        const response = await axios.get(`https://api.paystack.co/bank`, {
-            params: {currency: req.query.currency},
-            headers: {
-                Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
-            }
-        });
-        return res.status(200).json({
-            success: true,
-            data: response.data.data,
-        });
-    } catch (error) {
-        return res.status(500).json({error: error.message});
-    }
-}
 
 
 
@@ -289,3 +268,4 @@ exports.createWithdrawalAccount = async (req, res) => {
 
     }
 }
+
