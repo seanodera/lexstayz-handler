@@ -50,12 +50,13 @@ exports.initiatePaystackPayment = async (email, amount,currency,callback_url,ref
 }
 
 function getISO3CountryName(countryName) {
+
     const country = countryData.countries.all.find(country => country.name.toLowerCase() === countryName.toLowerCase());
 
     if (country) {
         return country.alpha3;
     } else {
-        return `Country with name ${countryName} not found.`;
+        return countryName;
     }
 }
 exports.getISO3CountryName = getISO3CountryName;
