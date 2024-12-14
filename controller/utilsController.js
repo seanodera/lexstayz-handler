@@ -17,7 +17,7 @@ try {
         .collection("bookings")
         .where("hostId", "==", hostId)
         .where('isConfirmed', '==', true)
-        // .where('checkInDate', '>=', new Date().toISOString())
+        .where('checkInDate', '>=', new Date().toISOString())
         .get();
     console.log(bookingsSnapshot.size)
     if (bookingsSnapshot.empty) {
