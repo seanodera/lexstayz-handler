@@ -10,9 +10,11 @@ app.use(cors());
 
 const payments = require('./routes/paymentRoutes')
 const mailers = require('./routes/mailerRoutes')
+const utils = require('./routes/utilsRoutes');
 
 app.use('/api',payments)
 app.use('/api',mailers)
+app.use('/api',utils)
 
 app.get('/api/hello-lexstayz', (req, res) => {
     res.send('Hello Lexstayz!');
