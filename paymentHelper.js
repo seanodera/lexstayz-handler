@@ -28,7 +28,7 @@ exports.convertCurrency = convertCurrency;
 
 exports.initiatePaystackPayment = async (email, amount,currency,callback_url,reference) => {
     let finalAmount;
-    if (currency === 'KES'){
+    if (currency === 'KES' || currency === 'GHS') {
         finalAmount= amount;
     } else {
        finalAmount = await convertCurrency(amount, currency)

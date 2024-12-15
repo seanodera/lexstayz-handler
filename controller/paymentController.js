@@ -6,30 +6,39 @@ const process = require("node:process");
 
 // Create Transaction
 exports.createTransaction = async (req, res) => {
-    const {email, amount, currency, reference, callback_url, country, booking} = req.body;
+    const {email, amount, currency, reference, callback_url, country, booking,purpose} = req.body;
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
     if (!secretKey) {
         return res.status(500).json({status: 'error', message: 'Paystack secret key not found'});
     }
+
     console.log(req.body);
     try {
         let authorization_url;
         let method;
         let paymentReference;
+        let reason;
+        if(purpose){
+            reason = purpose;
+        } else if (booking){
+            reason = `Stay at ${booking.stay.name}`
+        } else {
+            reason = 'lexstays services'
+        }
         if (currency === 'KES') {
-            const response = await initiatePaystackPayment(email, amount, currency, callback_url, reference);
-            authorization_url = response.data.authorization_url;
+            const response = await initiatePaystackPayment(email, amount, currency, callback_url+ `&method=Paystack_KE`, reference);
+            authorization_url = response.data.authorization_url ;
             paymentReference = response.data.reference;
             method = 'Paystack_KE'
         } else if (currency !== 'GHS') {
-            const response = await initiatePowerPayment(email, amount, country, callback_url, reference, `Stay at ${booking.stay.name}`);
+            const response = await initiatePowerPayment(email, amount, country, callback_url + `&method=Pawapay`, reference, reason);
             authorization_url = response.redirectUrl;
             paymentReference = response.reference;
             method = 'Pawapay'
         } else {
-            const response = await initiatePaystackPayment(email, amount, currency, callback_url, reference);
-            authorization_url = response.data.authorization_url;
+            const response = await initiatePaystackPayment(email, amount, currency, callback_url + `&method=Paystack`, reference);
+            authorization_url = response.data.authorization_url ;
             paymentReference = response.data.reference;
             method = 'Paystack'
         }
