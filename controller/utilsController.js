@@ -136,3 +136,43 @@ exports.refreshFeaturedStays = async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 }
+
+exports.getServerTime = async (req, res) => {
+    try {
+        const date = new Date();
+
+        // Calculate UTC offset in hours and minutes
+        const utcOffsetMinutes = date.getTimezoneOffset();
+        const offsetSign = utcOffsetMinutes > 0 ? "-" : "+";
+        const absoluteOffsetMinutes = Math.abs(utcOffsetMinutes);
+        const utcOffset = `${offsetSign}${String(Math.floor(absoluteOffsetMinutes / 60)).padStart(2, "0")}:${String(absoluteOffsetMinutes % 60).padStart(2, "0")}:00`;
+
+        // Determine if it's daylight savings time
+        const isDayLightSavingsTime = new Date().getTimezoneOffset() < Math.max(
+            new Date(date.getFullYear(), 0).getTimezoneOffset(),
+            new Date(date.getFullYear(), 6).getTimezoneOffset()
+        );
+
+        // Map days of the week
+        const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const dayOfTheWeek = daysOfWeek[date.getUTCDay()];
+
+        // Current file time: number of 100-nanosecond intervals since January 1, 1601 (Windows file time)
+        const epochTicks = 621355968000000000; // Ticks from 1601 to Unix epoch (1970)
+        const currentFileTime = epochTicks + date.getTime() * 10000;
+
+        return res.status(200).send({
+            currentDateTime: date.toUTCString(),
+            isoDateTime: date.toISOString(),
+            utcOffset: utcOffset,
+            isDayLightSavingsTime: isDayLightSavingsTime,
+            dayOfTheWeek: dayOfTheWeek,
+            timeZoneName: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            currentFileTime: currentFileTime,
+            ordinalDate: `${date.getFullYear()}-${Math.ceil((date - new Date(date.getFullYear(), 0, 1)) / (1000 * 60 * 60 * 24))}`,
+        });
+    } catch (error) {
+        console.error("Error fetching server time:", error);
+        return  res.status(500).send("Internal Server Error");
+    }
+};
