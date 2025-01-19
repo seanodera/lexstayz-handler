@@ -1,8 +1,8 @@
 const axios = require("axios");
 const {isAxiosError, post} = require("axios");
 const {initiatePowerPayment, initiatePaystackPayment, verifyPaystackPayment, createPaystackRecipient} = require("../paymentHelper");
-const process = require("node:process");
 
+const pawapayHost = process.env.STAGE === 'dev'? 'https://api.sandbox.pawapay.io':'https://api.pawapay.io';
 
 // Create Transaction
 exports.createTransaction = async (req, res) => {
@@ -216,7 +216,7 @@ exports.getPaystackBanks = async (req, res) => {
 
 exports.getPawapayConfigs = async (req, res) => {
     try {
-        const response = await axios.get('https://api.sandbox.pawapay.cloud/active-conf', {
+        const response = await axios.get(`${pawapayHost}/active-conf`, {
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${process.env.PAWAPAY_SECRET_KEY}`
@@ -230,6 +230,7 @@ exports.getPawapayConfigs = async (req, res) => {
             success: true,
         })
     } catch (error) {
+        console.log(error)
         return res.status(500).json({error: error.message});
     }
 }

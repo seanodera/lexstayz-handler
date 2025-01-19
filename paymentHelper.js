@@ -1,7 +1,7 @@
 const axios = require("axios");
-const process = require("node:process");
 const { v4: uuidv4 } = require('uuid');
 const countryData = require('country-data');
+const pawapayHost = process.env.STAGE === 'dev'? 'https://api.sandbox.pawapay.io':'https://api.pawapay.io';
 
 
 const convertCurrency = async (amount, currency) => {
@@ -62,7 +62,7 @@ function getISO3CountryName(countryName) {
 exports.getISO3CountryName = getISO3CountryName;
 
 exports.initiatePowerPayment = async (email, amount,country,callback_url,reference, reason) => {
-    const paymentUrl = `https://api.sandbox.pawapay.cloud/v1/widget/sessions`;
+    const paymentUrl = `${pawapayHost}/v1/widget/sessions`;
     const iso3CountryName = getISO3CountryName(country);
 
 
@@ -183,7 +183,7 @@ exports.verifyPaystackPayment = async (reference) => {
 exports.completePawaPayPayout = async (amount,payout,account) => {
     try {
         const generatedUUID = uuidv4();
-        const response = await axios.post('https://api.sandbox.pawapay.io/payouts', {
+        const response = await axios.post(`${pawapayHost}/payouts`, {
             payoutId: generatedUUID,
             amount: amount,
             currency: account.currency,
@@ -227,7 +227,7 @@ exports.completePaystackPayout = async (amount,payout,account) => {
 }
 
 exports.getConfigs = async () => {
-    return await axios.get('https://api.sandbox.pawapay.cloud/active-conf', {
+    return await axios.get(`${pawapayHost}/active-conf`, {
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${process.env.PAWAPAY_SECRET_KEY}`
