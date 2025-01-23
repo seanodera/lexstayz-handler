@@ -120,9 +120,9 @@ exports.updateBalance = async (userId) => {
 }
 
 
-exports.verifyPaystackPayment = async (reference) => {
+exports.verifyPaystackPayment = async (reference, method) => {
     try {
-        let secretKey = process.env.PAYSTACK_KE_SECRET_KEY;
+        let secretKey = (method === 'Paystack_KE')? process.env.PAYSTACK_KE_SECRET_KEY : process.env.PAYSTACK_SECRET_KEY;
         let response;
 
         // Attempt the first API call

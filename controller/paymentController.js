@@ -69,7 +69,7 @@ exports.verifyTransaction = async (req, res) => {
         let finalMethod = method
         if (method === 'Paystack' || method === 'Paystack_KE') {
 
-            const response = await verifyPaystackPayment(reference)
+            const response = await verifyPaystackPayment(reference, method)
             status = response.status
             amountPaid = response.amountPaid
             finalMethod = response.method
