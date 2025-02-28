@@ -7,14 +7,18 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(cors());
+const connectDB = require("./configs/db");
+connectDB();
 
 const payments = require('./routes/paymentRoutes')
 const mailers = require('./routes/mailerRoutes')
 const utils = require('./routes/utilsRoutes');
+const admin = require('./routes/authRoutes')
 
 app.use('/api',payments)
 app.use('/api',mailers)
 app.use('/api',utils)
+app.use('/api/admin', admin)
 
 app.get('/api/hello-lexstayz', (req, res) => {
     res.send('Hello Lexstayz!');

@@ -148,10 +148,9 @@ exports.verifyPaystackPayment = async (reference, method) => {
             throw new Error('First key failed with status 400');
         }
     } catch (e) {
+
         // Retry with the alternate API key if the first attempt fails or returns a 400 status
-        if (e.response && e.response.status === 400) {
-            const errorData = e.response.data;
-            if (errorData.data && errorData.data.code === 'transaction_not_found') {
+
                 try {
                     const alternateSecretKey = process.env.PAYSTACK_SECRET_KEY;
 
@@ -175,8 +174,8 @@ exports.verifyPaystackPayment = async (reference, method) => {
                 } catch (retryError) {
                     console.error('Both API keys failed', retryError);
                 }
-            }
-        }
+
+
     }
 };
 
